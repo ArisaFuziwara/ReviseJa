@@ -1,0 +1,1045 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ReviseJá - App de Revisão Espaçada</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --teal: #256c70;
+            --magenta: #bf0d70;
+            --pink: #f054b0;
+            --cream: #e0e9d0;
+        }
+        
+        body {
+            font-family: 'Quicksand', sans-serif;
+            background-color: var(--cream);
+        }
+        
+        .gradient-bg {
+            background: linear-gradient(135deg, var(--teal) 0%, var(--magenta) 100%);
+        }
+        
+        .card {
+            transition: all 0.3s ease;
+            border-left: 4px solid var(--teal);
+        }
+        
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 25px -5px rgba(37, 108, 112, 0.3);
+        }
+        
+        .tab-active {
+            background-color: var(--teal);
+            color: white;
+        }
+        
+        .calendar-day {
+            transition: all 0.2s ease;
+        }
+        
+        .calendar-day:hover:not(.empty-day):not(.today):not(.has-review) {
+            background-color: rgba(37, 108, 112, 0.1);
+        }
+        
+        .notification-dot {
+            animation: pulse 2s infinite;
+        }
+        
+        .custom-teal-bg {
+            background-color: var(--teal);
+        }
+        
+        .custom-magenta-bg {
+            background-color: var(--magenta);
+        }
+        
+        .custom-pink-bg {
+            background-color: var(--pink);
+        }
+        
+        .custom-cream-bg {
+            background-color: var(--cream);
+        }
+        
+        .custom-teal-text {
+            color: var(--teal);
+        }
+        
+        .custom-magenta-text {
+            color: var(--magenta);
+        }
+        
+        .custom-pink-text {
+            color: var(--pink);
+        }
+        
+        .custom-cream-text {
+            color: var(--cream);
+        }
+        
+        .custom-teal-border {
+            border-color: var(--teal);
+        }
+        
+        .custom-magenta-border {
+            border-color: var(--magenta);
+        }
+        
+        .custom-pink-border {
+            border-color: var(--pink);
+        }
+        
+        .custom-cream-border {
+            border-color: var(--cream);
+        }
+        
+        .btn-teal {
+            background-color: var(--teal);
+            color: white;
+        }
+        
+        .btn-teal:hover {
+            background-color: #1a5559;
+        }
+        
+        .btn-magenta {
+            background-color: var(--magenta);
+            color: white;
+        }
+        
+        .btn-magenta:hover {
+            background-color: #a00a5e;
+        }
+        
+        .btn-outline-teal {
+            border: 1px solid var(--teal);
+            color: var(--teal);
+        }
+        
+        .btn-outline-teal:hover {
+            background-color: var(--teal);
+            color: white;
+        }
+        
+        .btn-outline-magenta {
+            border: 1px solid var(--magenta);
+            color: var(--magenta);
+        }
+        
+        .btn-outline-magenta:hover {
+            background-color: var(--magenta);
+            color: white;
+        }
+        
+        @keyframes pulse {
+            0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(37, 108, 112, 0.7); }
+            70% { transform: scale(1); box-shadow: 0 0 0 10px rgba(37, 108, 112, 0); }
+            100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(37, 108, 112, 0); }
+        }
+        
+        /* Custom checkbox styling */
+        .form-checkbox {
+            appearance: none;
+            -webkit-appearance: none;
+            height: 1rem;
+            width: 1rem;
+            background-color: #fff;
+            border: 1px solid #d1d5db;
+            border-radius: 0.25rem;
+            cursor: pointer;
+            display: inline-block;
+            position: relative;
+            vertical-align: middle;
+        }
+        
+        .form-checkbox:checked {
+            background-color: var(--teal);
+            border-color: var(--teal);
+        }
+        
+        .form-checkbox:checked::after {
+            content: "";
+            display: block;
+            position: absolute;
+            top: 2px;
+            left: 6px;
+            width: 5px;
+            height: 10px;
+            border: solid white;
+            border-width: 0 2px 2px 0;
+            transform: rotate(45deg);
+        }
+        
+        /* Custom switch styling */
+        .switch {
+            position: relative;
+            display: inline-block;
+            width: 48px;
+            height: 24px;
+        }
+        
+        .switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+        
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #ccc;
+            transition: .4s;
+        }
+        
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 18px;
+            width: 18px;
+            left: 3px;
+            bottom: 3px;
+            background-color: white;
+            transition: .4s;
+        }
+        
+        input:checked + .slider {
+            background-color: var(--teal);
+        }
+        
+        input:checked + .slider:before {
+            transform: translateX(24px);
+        }
+        
+        .slider.round {
+            border-radius: 24px;
+        }
+        
+        .slider.round:before {
+            border-radius: 50%;
+        }
+        
+        /* Focus styles for form elements */
+        input:focus, select:focus {
+            outline: none;
+            border-color: var(--teal);
+            box-shadow: 0 0 0 3px rgba(37, 108, 112, 0.2);
+        }
+        
+        /* Card alternating colors */
+        .card:nth-child(odd) {
+            border-left-color: var(--teal);
+        }
+        
+        .card:nth-child(even) {
+            border-left-color: var(--magenta);
+        }
+    </style>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        teal: '#256c70',
+                        magenta: '#bf0d70',
+                        pink: '#f054b0',
+                        cream: '#e0e9d0',
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body>
+    <div id="app" class="min-h-screen">
+        <!-- Header -->
+        <header class="gradient-bg text-white p-4 shadow-lg">
+            <div class="container mx-auto flex justify-between items-center">
+                <div class="flex items-center space-x-2">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+                    </svg>
+                    <h1 class="text-2xl font-bold">ReviseJá</h1>
+                </div>
+                <div class="relative">
+                    <button id="notificationBtn" class="p-2 rounded-full hover:bg-white hover:bg-opacity-20 transition">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
+                        </svg>
+                        <span id="notificationDot" class="notification-dot absolute top-1 right-1 h-3 w-3 bg-cream rounded-full hidden"></span>
+                    </button>
+                </div>
+            </div>
+        </header>
+
+        <!-- Navigation Tabs -->
+        <div class="bg-white shadow">
+            <div class="container mx-auto">
+                <div class="flex overflow-x-auto">
+                    <button class="tab-btn px-6 py-4 font-medium text-sm tab-active" data-tab="calendar">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mb-1 mx-auto" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                        </svg>
+                        Calendário
+                    </button>
+                    <button class="tab-btn px-6 py-4 font-medium text-sm text-gray-600" data-tab="subjects">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mb-1 mx-auto" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+                        </svg>
+                        Matérias
+                    </button>
+                    <button class="tab-btn px-6 py-4 font-medium text-sm text-gray-600" data-tab="methods">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mb-1 mx-auto" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                        </svg>
+                        Métodos
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Main Content -->
+        <main class="container mx-auto p-4">
+            <!-- Calendar Tab -->
+            <div id="calendar-tab" class="tab-content">
+                <div class="bg-white rounded-xl shadow-md p-6 mb-6 border-t-4 border-teal">
+                    <div class="flex justify-between items-center mb-6">
+                        <button id="prevMonth" class="p-2 rounded-full hover:bg-teal hover:bg-opacity-10 transition">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-teal" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+                            </svg>
+                        </button>
+                        <h2 id="currentMonth" class="text-xl font-bold text-teal">Maio 2023</h2>
+                        <button id="nextMonth" class="p-2 rounded-full hover:bg-teal hover:bg-opacity-10 transition">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-teal" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+                            </svg>
+                        </button>
+                    </div>
+                    <div class="grid grid-cols-7 gap-2 text-center mb-2">
+                        <div class="text-sm font-medium text-teal">Dom</div>
+                        <div class="text-sm font-medium text-teal">Seg</div>
+                        <div class="text-sm font-medium text-teal">Ter</div>
+                        <div class="text-sm font-medium text-teal">Qua</div>
+                        <div class="text-sm font-medium text-teal">Qui</div>
+                        <div class="text-sm font-medium text-teal">Sex</div>
+                        <div class="text-sm font-medium text-teal">Sáb</div>
+                    </div>
+                    <div id="calendar-days" class="grid grid-cols-7 gap-2">
+                        <!-- Calendar days will be generated by JS -->
+                    </div>
+                </div>
+
+                <div id="today-reviews" class="bg-white rounded-xl shadow-md p-6 border-t-4 border-magenta">
+                    <h3 class="text-lg font-bold text-magenta mb-4">Revisões de Hoje</h3>
+                    <div id="reviews-list" class="space-y-3">
+                        <!-- Reviews will be generated by JS -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- Subjects Tab -->
+            <div id="subjects-tab" class="tab-content hidden">
+                <div class="flex justify-between items-center mb-6">
+                    <h2 class="text-xl font-bold text-teal">Minhas Matérias</h2>
+                    <button id="addSubjectBtn" class="bg-magenta text-white px-4 py-2 rounded-lg flex items-center space-x-2 hover:bg-pink transition">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+                        </svg>
+                        <span>Nova Matéria</span>
+                    </button>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    <div class="card bg-white rounded-xl shadow-md p-5">
+                        <div class="flex justify-between items-start">
+                            <div>
+                                <h3 class="font-bold text-lg text-teal">Matemática</h3>
+                                <p class="text-gray-600 text-sm">Método: Revisão Semanal</p>
+                                <div class="mt-2 flex items-center">
+                                    <span class="bg-teal bg-opacity-10 text-teal text-xs px-2 py-1 rounded-full">Próxima: Hoje</span>
+                                </div>
+                            </div>
+                            <div class="flex space-x-2">
+                                <button class="p-2 text-gray-500 hover:text-teal transition">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+                                    </svg>
+                                </button>
+                                <button class="p-2 text-gray-500 hover:text-teal transition">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                    </svg>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="card bg-white rounded-xl shadow-md p-5">
+                        <div class="flex justify-between items-start">
+                            <div>
+                                <h3 class="font-bold text-lg text-magenta">Física</h3>
+                                <p class="text-gray-600 text-sm">Método: Revisão Intensiva</p>
+                                <div class="mt-2 flex items-center">
+                                    <span class="bg-magenta bg-opacity-10 text-magenta text-xs px-2 py-1 rounded-full">Próxima: Amanhã</span>
+                                </div>
+                            </div>
+                            <div class="flex space-x-2">
+                                <button class="p-2 text-gray-500 hover:text-magenta transition">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+                                    </svg>
+                                </button>
+                                <button class="p-2 text-gray-500 hover:text-magenta transition">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                    </svg>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="card bg-white rounded-xl shadow-md p-5">
+                        <div class="flex justify-between items-start">
+                            <div>
+                                <h3 class="font-bold text-lg text-teal">História</h3>
+                                <p class="text-gray-600 text-sm">Método: Revisão Mensal</p>
+                                <div class="mt-2 flex items-center">
+                                    <span class="bg-teal bg-opacity-10 text-teal text-xs px-2 py-1 rounded-full">Próxima: Em 5 dias</span>
+                                </div>
+                            </div>
+                            <div class="flex space-x-2">
+                                <button class="p-2 text-gray-500 hover:text-teal transition">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+                                    </svg>
+                                </button>
+                                <button class="p-2 text-gray-500 hover:text-teal transition">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                    </svg>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Methods Tab -->
+            <div id="methods-tab" class="tab-content hidden">
+                <div class="flex justify-between items-center mb-6">
+                    <h2 class="text-xl font-bold text-magenta">Métodos de Revisão</h2>
+                    <button id="addMethodBtn" class="bg-teal text-white px-4 py-2 rounded-lg flex items-center space-x-2 hover:bg-opacity-90 transition">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+                        </svg>
+                        <span>Novo Método</span>
+                    </button>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div class="card bg-white rounded-xl shadow-md p-5">
+                        <div class="flex justify-between items-start">
+                            <div>
+                                <h3 class="font-bold text-lg text-teal">Revisão Semanal</h3>
+                                <p class="text-gray-600 text-sm mt-1">Revisão aos finais de semana por 2 meses</p>
+                                <div class="mt-3 space-y-2">
+                                    <div class="flex items-center">
+                                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-teal mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                                        </svg>
+                                        <span class="text-sm">Frequência: Sábados e Domingos</span>
+                                    </div>
+                                    <div class="flex items-center">
+                                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-teal mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                        </svg>
+                                        <span class="text-sm">Duração: 2 meses</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="flex space-x-2">
+                                <button class="p-2 text-gray-500 hover:text-teal transition">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+                                    </svg>
+                                </button>
+                                <button class="p-2 text-gray-500 hover:text-teal transition">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                    </svg>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="card bg-white rounded-xl shadow-md p-5">
+                        <div class="flex justify-between items-start">
+                            <div>
+                                <h3 class="font-bold text-lg text-magenta">Revisão Intensiva</h3>
+                                <p class="text-gray-600 text-sm mt-1">Revisão a cada 2 dias por 3 semanas</p>
+                                <div class="mt-3 space-y-2">
+                                    <div class="flex items-center">
+                                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-magenta mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                                        </svg>
+                                        <span class="text-sm">Frequência: A cada 2 dias</span>
+                                    </div>
+                                    <div class="flex items-center">
+                                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-magenta mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                        </svg>
+                                        <span class="text-sm">Duração: 3 semanas</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="flex space-x-2">
+                                <button class="p-2 text-gray-500 hover:text-magenta transition">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+                                    </svg>
+                                </button>
+                                <button class="p-2 text-gray-500 hover:text-magenta transition">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                    </svg>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="card bg-white rounded-xl shadow-md p-5">
+                        <div class="flex justify-between items-start">
+                            <div>
+                                <h3 class="font-bold text-lg text-teal">Revisão Mensal</h3>
+                                <p class="text-gray-600 text-sm mt-1">Revisão uma vez por mês por 6 meses</p>
+                                <div class="mt-3 space-y-2">
+                                    <div class="flex items-center">
+                                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-teal mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                                        </svg>
+                                        <span class="text-sm">Frequência: Uma vez por mês</span>
+                                    </div>
+                                    <div class="flex items-center">
+                                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-teal mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                        </svg>
+                                        <span class="text-sm">Duração: 6 meses</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="flex space-x-2">
+                                <button class="p-2 text-gray-500 hover:text-teal transition">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+                                    </svg>
+                                </button>
+                                <button class="p-2 text-gray-500 hover:text-teal transition">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                    </svg>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+
+        <!-- Modals -->
+        <!-- Add Subject Modal -->
+        <div id="addSubjectModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
+            <div class="bg-white rounded-xl shadow-xl p-6 w-full max-w-md mx-4 border-t-4 border-teal">
+                <div class="flex justify-between items-center mb-4">
+                    <h3 class="text-xl font-bold text-teal">Nova Matéria</h3>
+                    <button class="close-modal p-2 text-gray-500 hover:text-teal transition">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                    </button>
+                </div>
+                <form id="subjectForm" class="space-y-4">
+                    <div>
+                        <label for="subjectName" class="block text-sm font-medium text-teal mb-1">Nome da Matéria</label>
+                        <input type="text" id="subjectName" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal focus:border-teal" placeholder="Ex: Matemática">
+                    </div>
+                    <div>
+                        <label for="subjectMethod" class="block text-sm font-medium text-teal mb-1">Método de Revisão</label>
+                        <select id="subjectMethod" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal focus:border-teal">
+                            <option value="">Selecione um método</option>
+                            <option value="weekly">Revisão Semanal</option>
+                            <option value="intensive">Revisão Intensiva</option>
+                            <option value="monthly">Revisão Mensal</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label for="subjectColor" class="block text-sm font-medium text-teal mb-1">Cor</label>
+                        <div class="grid grid-cols-4 gap-2">
+                            <button type="button" class="color-btn h-8 w-8 rounded-full custom-teal-bg border-2 border-gray-800 hover:border-gray-400 transition"></button>
+                            <button type="button" class="color-btn h-8 w-8 rounded-full custom-magenta-bg border-2 border-transparent hover:border-gray-400 transition"></button>
+                            <button type="button" class="color-btn h-8 w-8 rounded-full custom-pink-bg border-2 border-transparent hover:border-gray-400 transition"></button>
+                            <button type="button" class="color-btn h-8 w-8 rounded-full custom-cream-bg border-2 border-transparent hover:border-gray-400 transition"></button>
+                        </div>
+                    </div>
+                    <div class="flex justify-end space-x-3 pt-2">
+                        <button type="button" class="close-modal px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-100 transition">Cancelar</button>
+                        <button type="submit" class="px-4 py-2 bg-teal text-white rounded-lg hover:bg-opacity-90 transition">Adicionar</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Add Method Modal -->
+        <div id="addMethodModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
+            <div class="bg-white rounded-xl shadow-xl p-6 w-full max-w-md mx-4 border-t-4 border-magenta">
+                <div class="flex justify-between items-center mb-4">
+                    <h3 class="text-xl font-bold text-magenta">Novo Método de Revisão</h3>
+                    <button class="close-modal p-2 text-gray-500 hover:text-magenta transition">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                    </button>
+                </div>
+                <form id="methodForm" class="space-y-4">
+                    <div>
+                        <label for="methodName" class="block text-sm font-medium text-magenta mb-1">Nome do Método</label>
+                        <input type="text" id="methodName" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-magenta focus:border-magenta" placeholder="Ex: Revisão Semanal">
+                    </div>
+                    <div>
+                        <label for="methodFrequency" class="block text-sm font-medium text-magenta mb-1">Frequência</label>
+                        <select id="methodFrequency" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-magenta focus:border-magenta">
+                            <option value="daily">Diariamente</option>
+                            <option value="every2days">A cada 2 dias</option>
+                            <option value="weekly">Semanalmente</option>
+                            <option value="weekends">Finais de semana</option>
+                            <option value="monthly">Mensalmente</option>
+                            <option value="custom">Personalizado</option>
+                        </select>
+                    </div>
+                    <div id="customFrequency" class="hidden">
+                        <label class="block text-sm font-medium text-magenta mb-1">Dias da Semana</label>
+                        <div class="flex flex-wrap gap-2">
+                            <label class="inline-flex items-center">
+                                <input type="checkbox" class="form-checkbox h-4 w-4 text-magenta">
+                                <span class="ml-2 text-sm text-gray-700">Dom</span>
+                            </label>
+                            <label class="inline-flex items-center">
+                                <input type="checkbox" class="form-checkbox h-4 w-4 text-magenta">
+                                <span class="ml-2 text-sm text-gray-700">Seg</span>
+                            </label>
+                            <label class="inline-flex items-center">
+                                <input type="checkbox" class="form-checkbox h-4 w-4 text-magenta">
+                                <span class="ml-2 text-sm text-gray-700">Ter</span>
+                            </label>
+                            <label class="inline-flex items-center">
+                                <input type="checkbox" class="form-checkbox h-4 w-4 text-magenta">
+                                <span class="ml-2 text-sm text-gray-700">Qua</span>
+                            </label>
+                            <label class="inline-flex items-center">
+                                <input type="checkbox" class="form-checkbox h-4 w-4 text-magenta">
+                                <span class="ml-2 text-sm text-gray-700">Qui</span>
+                            </label>
+                            <label class="inline-flex items-center">
+                                <input type="checkbox" class="form-checkbox h-4 w-4 text-magenta">
+                                <span class="ml-2 text-sm text-gray-700">Sex</span>
+                            </label>
+                            <label class="inline-flex items-center">
+                                <input type="checkbox" class="form-checkbox h-4 w-4 text-magenta">
+                                <span class="ml-2 text-sm text-gray-700">Sáb</span>
+                            </label>
+                        </div>
+                    </div>
+                    <div>
+                        <label for="methodDuration" class="block text-sm font-medium text-magenta mb-1">Duração</label>
+                        <div class="flex space-x-2">
+                            <input type="number" id="methodDuration" class="w-1/2 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-magenta focus:border-magenta" min="1" value="1">
+                            <select id="methodDurationType" class="w-1/2 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-magenta focus:border-magenta">
+                                <option value="weeks">Semanas</option>
+                                <option value="months">Meses</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="flex justify-end space-x-3 pt-2">
+                        <button type="button" class="close-modal px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-100 transition">Cancelar</button>
+                        <button type="submit" class="px-4 py-2 bg-magenta text-white rounded-lg hover:bg-pink transition">Adicionar</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Notification Settings Modal -->
+        <div id="notificationModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
+            <div class="bg-white rounded-xl shadow-xl p-6 w-full max-w-md mx-4 border-t-4 border-teal">
+                <div class="flex justify-between items-center mb-4">
+                    <h3 class="text-xl font-bold text-teal">Configurações de Notificação</h3>
+                    <button class="close-modal p-2 text-gray-500 hover:text-teal transition">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                    </button>
+                </div>
+                <form id="notificationForm" class="space-y-4">
+                    <div class="flex items-center justify-between">
+                        <span class="text-teal font-medium">Ativar notificações</span>
+                        <label class="switch">
+                            <input type="checkbox" id="enableNotifications" checked>
+                            <span class="slider round w-12 h-6 bg-gray-300 rounded-full relative inline-block">
+                                <span class="absolute h-5 w-5 bg-white rounded-full top-0.5 left-0.5 transition-all duration-300 transform"></span>
+                            </span>
+                        </label>
+                    </div>
+                    <div id="notificationOptions" class="space-y-4">
+                        <div>
+                            <label for="notifyTime" class="block text-sm font-medium text-teal mb-1">Horário da notificação</label>
+                            <input type="time" id="notifyTime" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal focus:border-teal" value="08:00">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-teal mb-1">Notificar sobre</label>
+                            <div class="space-y-2">
+                                <label class="inline-flex items-center">
+                                    <input type="checkbox" class="form-checkbox h-4 w-4 text-teal" checked>
+                                    <span class="ml-2 text-sm text-gray-700">Revisões do dia</span>
+                                </label>
+                                <div class="block">
+                                    <label class="inline-flex items-center">
+                                        <input type="checkbox" class="form-checkbox h-4 w-4 text-teal" checked>
+                                        <span class="ml-2 text-sm text-gray-700">Lembrete de revisões próximas</span>
+                                    </label>
+                                </div>
+                                <div class="block">
+                                    <label class="inline-flex items-center">
+                                        <input type="checkbox" class="form-checkbox h-4 w-4 text-teal">
+                                        <span class="ml-2 text-sm text-gray-700">Resumo semanal</span>
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="flex justify-end space-x-3 pt-2">
+                        <button type="button" class="close-modal px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-100 transition">Cancelar</button>
+                        <button type="submit" class="px-4 py-2 bg-teal text-white rounded-lg hover:bg-opacity-90 transition">Salvar</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        // Tab Navigation
+        const tabBtns = document.querySelectorAll('.tab-btn');
+        const tabContents = document.querySelectorAll('.tab-content');
+
+        tabBtns.forEach(btn => {
+            btn.addEventListener('click', () => {
+                // Remove active class from all tabs
+                tabBtns.forEach(b => b.classList.remove('tab-active'));
+                tabBtns.forEach(b => b.classList.add('text-gray-600'));
+                
+                // Add active class to clicked tab
+                btn.classList.add('tab-active');
+                btn.classList.remove('text-gray-600');
+                
+                // Hide all tab contents
+                tabContents.forEach(content => content.classList.add('hidden'));
+                
+                // Show the selected tab content
+                const tabId = btn.getAttribute('data-tab');
+                document.getElementById(`${tabId}-tab`).classList.remove('hidden');
+            });
+        });
+
+        // Modal functionality
+        const addSubjectBtn = document.getElementById('addSubjectBtn');
+        const addMethodBtn = document.getElementById('addMethodBtn');
+        const notificationBtn = document.getElementById('notificationBtn');
+        const addSubjectModal = document.getElementById('addSubjectModal');
+        const addMethodModal = document.getElementById('addMethodModal');
+        const notificationModal = document.getElementById('notificationModal');
+        const closeModalBtns = document.querySelectorAll('.close-modal');
+
+        addSubjectBtn.addEventListener('click', () => {
+            addSubjectModal.classList.remove('hidden');
+        });
+
+        addMethodBtn.addEventListener('click', () => {
+            addMethodModal.classList.remove('hidden');
+        });
+
+        notificationBtn.addEventListener('click', () => {
+            notificationModal.classList.remove('hidden');
+        });
+
+        closeModalBtns.forEach(btn => {
+            btn.addEventListener('click', () => {
+                addSubjectModal.classList.add('hidden');
+                addMethodModal.classList.add('hidden');
+                notificationModal.classList.add('hidden');
+            });
+        });
+
+        // Custom frequency toggle
+        const methodFrequency = document.getElementById('methodFrequency');
+        const customFrequency = document.getElementById('customFrequency');
+
+        methodFrequency.addEventListener('change', () => {
+            if (methodFrequency.value === 'custom') {
+                customFrequency.classList.remove('hidden');
+            } else {
+                customFrequency.classList.add('hidden');
+            }
+        });
+
+        // Notification toggle
+        const enableNotifications = document.getElementById('enableNotifications');
+        const notificationOptions = document.getElementById('notificationOptions');
+
+        enableNotifications.addEventListener('change', () => {
+            if (enableNotifications.checked) {
+                notificationOptions.classList.remove('hidden');
+                enableNotifications.nextElementSibling.querySelector('span').classList.add('translate-x-6');
+                enableNotifications.nextElementSibling.classList.remove('bg-gray-300');
+                enableNotifications.nextElementSibling.classList.add('bg-teal');
+            } else {
+                notificationOptions.classList.add('hidden');
+                enableNotifications.nextElementSibling.querySelector('span').classList.remove('translate-x-6');
+                enableNotifications.nextElementSibling.classList.add('bg-gray-300');
+                enableNotifications.nextElementSibling.classList.remove('bg-teal');
+            }
+        });
+
+        // Initialize notification toggle state
+        if (enableNotifications.checked) {
+            enableNotifications.nextElementSibling.querySelector('span').classList.add('translate-x-6');
+            enableNotifications.nextElementSibling.classList.remove('bg-gray-300');
+            enableNotifications.nextElementSibling.classList.add('bg-teal');
+        }
+
+        // Color selection in subject form
+        const colorBtns = document.querySelectorAll('.color-btn');
+        let selectedColor = null;
+
+        colorBtns.forEach(btn => {
+            btn.addEventListener('click', () => {
+                colorBtns.forEach(b => b.classList.remove('border-gray-800', 'border-2'));
+                btn.classList.add('border-gray-800', 'border-2');
+                selectedColor = window.getComputedStyle(btn).backgroundColor;
+            });
+        });
+
+        // Calendar functionality
+        const calendarDays = document.getElementById('calendar-days');
+        const currentMonthEl = document.getElementById('currentMonth');
+        const prevMonthBtn = document.getElementById('prevMonth');
+        const nextMonthBtn = document.getElementById('nextMonth');
+        const reviewsList = document.getElementById('reviews-list');
+
+        let currentDate = new Date();
+        let currentMonth = currentDate.getMonth();
+        let currentYear = currentDate.getFullYear();
+
+        // Generate calendar
+        function generateCalendar(month, year) {
+            calendarDays.innerHTML = '';
+            
+            const firstDay = new Date(year, month, 1).getDay();
+            const daysInMonth = new Date(year, month + 1, 0).getDate();
+            
+            // Update month display
+            const monthNames = ['Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho', 'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'];
+            currentMonthEl.textContent = `${monthNames[month]} ${year}`;
+            
+            // Add empty cells for days before the first day of the month
+            for (let i = 0; i < firstDay; i++) {
+                const emptyDay = document.createElement('div');
+                emptyDay.classList.add('empty-day', 'h-12', 'rounded-lg');
+                calendarDays.appendChild(emptyDay);
+            }
+            
+            // Add days of the month
+            for (let day = 1; day <= daysInMonth; day++) {
+                const dayEl = document.createElement('div');
+                dayEl.classList.add('calendar-day', 'h-12', 'rounded-lg', 'flex', 'flex-col', 'items-center', 'justify-center', 'cursor-pointer', 'transition');
+                
+                const dateObj = new Date(year, month, day);
+                const isToday = dateObj.toDateString() === new Date().toDateString();
+                
+                // Check if this day has reviews (for demo purposes)
+                const hasReview = (day % 3 === 0 || day % 7 === 0);
+                
+                if (isToday) {
+                    dayEl.classList.add('today', 'custom-teal-bg', 'text-white');
+                } else if (hasReview) {
+                    // Alternate between teal and magenta for review days
+                    if (day % 2 === 0) {
+                        dayEl.classList.add('has-review', 'bg-teal', 'bg-opacity-10', 'text-teal');
+                    } else {
+                        dayEl.classList.add('has-review', 'bg-magenta', 'bg-opacity-10', 'text-magenta');
+                    }
+                } else {
+                    dayEl.classList.add('bg-white', 'hover:bg-teal', 'hover:bg-opacity-10');
+                }
+                
+                const dayNum = document.createElement('span');
+                dayNum.textContent = day;
+                dayNum.classList.add('text-sm', 'font-medium');
+                dayEl.appendChild(dayNum);
+                
+                if (hasReview) {
+                    const indicator = document.createElement('div');
+                    if (day % 2 === 0) {
+                        indicator.classList.add('w-1', 'h-1', 'rounded-full', isToday ? 'bg-white' : 'custom-teal-bg', 'mt-1');
+                    } else {
+                        indicator.classList.add('w-1', 'h-1', 'rounded-full', isToday ? 'bg-white' : 'custom-magenta-bg', 'mt-1');
+                    }
+                    dayEl.appendChild(indicator);
+                }
+                
+                calendarDays.appendChild(dayEl);
+                
+                // Add click event to show reviews for that day
+                dayEl.addEventListener('click', () => {
+                    generateReviews(day, month, year);
+                    
+                    // Highlight selected day
+                    document.querySelectorAll('.calendar-day').forEach(d => {
+                        if (d.classList.contains('today')) {
+                            d.classList.add('custom-teal-bg', 'text-white');
+                        } else if (d.classList.contains('has-review')) {
+                            if (d.classList.contains('text-teal')) {
+                                d.classList.add('bg-teal', 'bg-opacity-10');
+                            } else {
+                                d.classList.add('bg-magenta', 'bg-opacity-10');
+                            }
+                            d.classList.remove('bg-teal', 'ring-2', 'ring-teal');
+                        } else {
+                            d.classList.add('bg-white');
+                            d.classList.remove('bg-teal', 'bg-opacity-10', 'ring-2', 'ring-teal');
+                        }
+                    });
+                    
+                    if (!isToday) {
+                        dayEl.classList.remove('bg-teal', 'bg-opacity-10', 'bg-magenta', 'bg-opacity-10', 'bg-white');
+                        dayEl.classList.add('bg-teal', 'text-white', 'ring-2', 'ring-cream');
+                    }
+                });
+            }
+        }
+
+        // Generate reviews for a specific day
+        function generateReviews(day, month, year) {
+            reviewsList.innerHTML = '';
+            
+            const date = new Date(year, month, day);
+            const dateStr = date.toLocaleDateString('pt-BR', { weekday: 'long', day: 'numeric', month: 'long' });
+            const capitalizedDateStr = dateStr.charAt(0).toUpperCase() + dateStr.slice(1);
+            
+            // Check if this day has reviews (for demo purposes)
+            const hasReview = (day % 3 === 0 || day % 7 === 0);
+            
+            if (hasReview) {
+                // Sample reviews
+                const subjects = ['Matemática', 'Física', 'História', 'Biologia', 'Química'];
+                const methods = ['Revisão Semanal', 'Revisão Intensiva', 'Revisão Mensal'];
+                
+                // Generate 1-3 reviews for this day
+                const numReviews = Math.floor(Math.random() * 3) + 1;
+                
+                for (let i = 0; i < numReviews; i++) {
+                    const subjectIndex = Math.floor(Math.random() * subjects.length);
+                    const methodIndex = Math.floor(Math.random() * methods.length);
+                    
+                    const reviewEl = document.createElement('div');
+                    reviewEl.classList.add('flex', 'items-center', 'justify-between', 'bg-white', 'rounded-lg', 'p-3', 'shadow-sm', 'border', 'border-gray-100');
+                    
+                    // Alternate between teal and magenta for review items
+                    const colorClass = i % 2 === 0 ? 'custom-teal-bg' : 'custom-magenta-bg';
+                    const textColorClass = i % 2 === 0 ? 'custom-teal-text' : 'custom-magenta-text';
+                    
+                    reviewEl.innerHTML = `
+                        <div class="flex items-center">
+                            <div class="w-3 h-3 rounded-full ${colorClass} mr-3"></div>
+                            <div>
+                                <h4 class="font-medium ${textColorClass}">${subjects[subjectIndex]}</h4>
+                                <p class="text-xs text-gray-500">${methods[methodIndex]}</p>
+                            </div>
+                        </div>
+                        <button class="p-1 text-gray-400 hover:${textColorClass} transition">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                            </svg>
+                        </button>
+                    `;
+                    
+                    reviewsList.appendChild(reviewEl);
+                }
+            } else {
+                const emptyEl = document.createElement('div');
+                emptyEl.classList.add('text-center', 'py-6');
+                emptyEl.innerHTML = `
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12 mx-auto text-teal mb-2 opacity-50" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+                    </svg>
+                    <p class="text-teal">Nenhuma revisão para este dia</p>
+                `;
+                reviewsList.appendChild(emptyEl);
+            }
+        }
+
+        // Month navigation
+        prevMonthBtn.addEventListener('click', () => {
+            currentMonth--;
+            if (currentMonth < 0) {
+                currentMonth = 11;
+                currentYear--;
+            }
+            generateCalendar(currentMonth, currentYear);
+            generateReviews(new Date().getDate(), currentMonth, currentYear);
+        });
+
+        nextMonthBtn.addEventListener('click', () => {
+            currentMonth++;
+            if (currentMonth > 11) {
+                currentMonth = 0;
+                currentYear++;
+            }
+            generateCalendar(currentMonth, currentYear);
+            generateReviews(new Date().getDate(), currentMonth, currentYear);
+        });
+
+        // Form submissions
+        document.getElementById('subjectForm').addEventListener('submit', (e) => {
+            e.preventDefault();
+            addSubjectModal.classList.add('hidden');
+            // In a real app, we would save the data here
+        });
+
+        document.getElementById('methodForm').addEventListener('submit', (e) => {
+            e.preventDefault();
+            addMethodModal.classList.add('hidden');
+            // In a real app, we would save the data here
+        });
+
+        document.getElementById('notificationForm').addEventListener('submit', (e) => {
+            e.preventDefault();
+            notificationModal.classList.add('hidden');
+            // Show notification dot for demo purposes
+            document.getElementById('notificationDot').classList.remove('hidden');
+            // In a real app, we would save the settings here
+        });
+
+        // Initialize calendar and reviews
+        generateCalendar(currentMonth, currentYear);
+        generateReviews(currentDate.getDate(), currentMonth, currentYear);
+    </script>
+</body>
+</html>
